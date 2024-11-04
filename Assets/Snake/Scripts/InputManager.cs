@@ -5,12 +5,11 @@ using UnityEngine.InputSystem;
 public class InputManager : MonoBehaviour
 {
     public event Action<Vector2> onMove;
-    
+    public event Action<bool> onJump;
     private InputSystem_Actions inputs;
     private Vector2 moveInput;
-    private Vector2 lookInput;
-    private Vector2 zoomInput;
-
+    private bool jumpInput; 
+ 
     private void OnEnable()
     {
         SetupInput();
@@ -28,7 +27,7 @@ public class InputManager : MonoBehaviour
 
 
         inputs.Player.Move.performed += OnMove;
-     
+        inputs.Player.Jump.performed += OnJump;
         
     }
 
@@ -50,6 +49,12 @@ public class InputManager : MonoBehaviour
         onMove?.Invoke(moveInput);
     }
 
+    private void OnJump(InputAction.CallbackContext context)
+    {
+        jumpInput = context.ReadValueAsButton();
+
+        onJump?.Invoke(jumpInput);
+    }
   
     private void Update()
     {

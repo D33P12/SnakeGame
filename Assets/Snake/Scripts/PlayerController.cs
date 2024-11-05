@@ -15,7 +15,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private int maxHistorySize = 100;
     [SerializeField] private float jumpForce = 5f; 
     [SerializeField] private bool isGrounded;
-    
+    [SerializeField] private ParticleSystem particleEffect;
+    [SerializeField] private ParticleSystem particleEffect1;
     private List<GameObject> bodyParts = new List<GameObject>();
     private List<Vector3> positionsHistory = new List<Vector3>();
     private Vector2 currentMoveInput; 
@@ -93,8 +94,10 @@ public class PlayerController : MonoBehaviour
             Vector3 targetPosition = positionsHistory[historyIndex];
             Quaternion targetRotation = rotationsHistory[historyIndex];
 
-            bodyParts[i].transform.position = Vector3.Lerp(bodyParts[i].transform.position, targetPosition, bodySpeed * Time.deltaTime);
-            bodyParts[i].transform.rotation = Quaternion.Lerp(bodyParts[i].transform.rotation, targetRotation, bodySpeed * Time.deltaTime);
+            bodyParts[i].transform.position = Vector3.Lerp(bodyParts[i].transform.position,
+                targetPosition, bodySpeed * Time.deltaTime);
+            bodyParts[i].transform.rotation = Quaternion.Lerp(bodyParts[i].transform.rotation, 
+                targetRotation, bodySpeed * Time.deltaTime);
         }
     }
     
@@ -108,6 +111,7 @@ public class PlayerController : MonoBehaviour
         if (other.CompareTag("Food"))
         {
             GrowSnake();
+            GrowSnake();
             GameManager.food++;
             Destroy(other.gameObject);
         }
@@ -118,14 +122,23 @@ public class PlayerController : MonoBehaviour
         if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded = true; 
+            if (particleEffect != null&& particleEffect1 != null && particleEffect.isPlaying)
+            {
+                particleEffect.Stop();
+                particleEffect1.Stop();
+            }
         }
     }
-
     private void OnCollisionExit(Collision collision)
     {
         if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded = false; 
+            if (particleEffect != null && particleEffect1 != null&& !particleEffect.isPlaying)
+            {
+                particleEffect.Play();
+                particleEffect1.Play();
+            }
         }
     }
 }

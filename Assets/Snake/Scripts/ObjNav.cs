@@ -1,26 +1,28 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
+using UnityEngine.AI;
 public class ObjNav : MonoBehaviour
 {
-    [SerializeField] public List<GameObject> prefabs;
-    private Transform player;
-    [SerializeField] public Slider distanceSlider;
-    private GameObject _closestSoul;
-    private float closestDistance;
-    [SerializeField] private float maxDistance = 100f;
+    [SerializeField] public Slider distanceSlider;  
+    [SerializeField] private float maxDistance = 100f; 
 
-    void Update()
+    private Transform player;  
+    private GameObject _closestSoul; 
+    private float closestDistance;  
+    private List<GameObject> spawnedPrefabs = new List<GameObject>(); 
+
+    private void Start()
     {
-        player = player == null ? GameObject.FindWithTag("Player").GetComponent<Transform>() : player;
-        if (player == null)
-        {
-            player = GameObject.FindWithTag("Player").transform;
-        }
+        player = GameObject.FindWithTag("Player")?.transform; 
+    }
+
+    private void Update()
+    {
+        if (player == null) return; 
 
         FindClosestPrefab();
-        DisplayClosestPrefab();
+        DisplayClosestPrefab(); 
     }
 
     void FindClosestPrefab()
@@ -28,7 +30,7 @@ public class ObjNav : MonoBehaviour
         closestDistance = Mathf.Infinity;
         _closestSoul = null;
 
-        foreach (GameObject prefab in prefabs)
+        foreach (GameObject prefab in spawnedPrefabs)
         {
             if (prefab == null || !prefab.activeInHierarchy) continue;
 
@@ -47,6 +49,26 @@ public class ObjNav : MonoBehaviour
         if (_closestSoul != null)
         {
             distanceSlider.value = Mathf.Clamp(closestDistance, 0, maxDistance);
+        }
+        else
+        {
+            distanceSlider.value = 0;
+        }
+    }
+
+    public void RegisterPrefabSpawn(GameObject prefab)
+    {
+        if (!spawnedPrefabs.Contains(prefab))
+        {
+            spawnedPrefabs.Add(prefab);
+        }
+    }
+
+    public void UnregisterPrefab(GameObject prefab)
+    {
+        if (spawnedPrefabs.Contains(prefab))
+        {
+            spawnedPrefabs.Remove(prefab);
         }
     }
 }

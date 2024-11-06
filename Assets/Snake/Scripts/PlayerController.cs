@@ -22,7 +22,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float Scaletime;
     [SerializeField] private Ease Easebody;
     [SerializeField] public TextMeshProUGUI CollectedText;
-   
+    [SerializeField] private FoodSpawner foodSpawner;
     
     private List<GameObject> bodyParts = new List<GameObject>();
     private List<Vector3> positionsHistory = new List<Vector3>();
@@ -124,10 +124,19 @@ public class PlayerController : MonoBehaviour
         if (other.CompareTag("Food"))
         {
             GrowSnake();
-            GrowSnake();
             GameManager.food++;
             Destroy(other.gameObject);
-            CollectedText.text ="SCORE: " + GameManager.food.ToString();
+
+            if (CollectedText != null)
+            {
+                CollectedText.text = "SCORE: " + GameManager.food.ToString();
+            }
+
+            GameObject foodSpawner = GameObject.Find("FoodSpawner");
+            if (foodSpawner != null)
+            {
+                foodSpawner.GetComponent<FoodSpawner>().SpawnFood();
+            }
         }
     }
     private void OnCollisionEnter(Collision collision)

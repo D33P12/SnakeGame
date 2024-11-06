@@ -1,6 +1,8 @@
 using System;
 using UnityEngine;
 using System.Collections.Generic;
+using DG.Tweening;
+using TMPro;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private GameManager gameManager;
@@ -17,17 +19,24 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private bool isGrounded;
     [SerializeField] private ParticleSystem particleEffect;
     [SerializeField] private ParticleSystem particleEffect1;
+    [SerializeField] private float Scaletime;
+    [SerializeField] private Ease Easebody;
+    [SerializeField] public TextMeshProUGUI CollectedText;
+    
     private List<GameObject> bodyParts = new List<GameObject>();
     private List<Vector3> positionsHistory = new List<Vector3>();
     private Vector2 currentMoveInput; 
     private List<Quaternion> rotationsHistory = new List<Quaternion>();
     public int maxRotationHistorySize = 10;
+    
     [SerializeField] private GameObject TailPart;
+    [SerializeField] private Canvas gameOverCanvas;
     private void Start()
     {
         positionsHistory.Add(playerTransform.position);
         GameObject body = Instantiate(TailPart, playerTransform.position, Quaternion.identity);
         bodyParts.Insert(0, body);
+        gameOverCanvas.gameObject.SetActive(false);
     }
     private void OnEnable()
     {
@@ -58,6 +67,9 @@ public class PlayerController : MonoBehaviour
     {
         playerRigidbody.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         isGrounded = false;
+        
+        particleEffect.Play();
+        particleEffect1.Play();
     }
     private void OnMove(Vector2 inputValue)
     {
@@ -100,11 +112,12 @@ public class PlayerController : MonoBehaviour
                 targetRotation, bodySpeed * Time.deltaTime);
         }
     }
-    
-    public void GrowSnake()
+
+    private void GrowSnake()
     {
         GameObject body = Instantiate(bodyPrefab, playerTransform.position, Quaternion.identity);
         bodyParts.Insert(0, body);
+        body.transform.DOScale(Vector3.one,Scaletime).SetEase(Easebody);
     }
     private void OnTriggerEnter(Collider other)
     {
@@ -114,8 +127,20 @@ public class PlayerController : MonoBehaviour
             GrowSnake();
             GameManager.food++;
             Destroy(other.gameObject);
+            CollectedText.text ="SCORE: " + GameManager.food.ToString();
         }
-        
+        else if (other.CompareTag("Obstacle")) 
+        {
+            TriggerGameOver();
+        }
+     
+    }
+    private void TriggerGameOver()
+    {
+            
+        Time.timeScale = 0;
+
+        gameOverCanvas.gameObject.SetActive(true);
     }
     private void OnCollisionEnter(Collision collision)
     {
@@ -134,11 +159,8 @@ public class PlayerController : MonoBehaviour
         if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded = false; 
-            if (particleEffect != null && particleEffect1 != null&& !particleEffect.isPlaying)
-            {
-                particleEffect.Play();
-                particleEffect1.Play();
-            }
+            
+          
         }
     }
 }

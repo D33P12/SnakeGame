@@ -22,6 +22,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float Scaletime;
     [SerializeField] private Ease Easebody;
     [SerializeField] public TextMeshProUGUI CollectedText;
+   
     
     private List<GameObject> bodyParts = new List<GameObject>();
     private List<Vector3> positionsHistory = new List<Vector3>();
@@ -30,13 +31,12 @@ public class PlayerController : MonoBehaviour
     public int maxRotationHistorySize = 10;
     
     [SerializeField] private GameObject TailPart;
-    [SerializeField] private Canvas gameOverCanvas;
+  
     private void Start()
     {
         positionsHistory.Add(playerTransform.position);
         GameObject body = Instantiate(TailPart, playerTransform.position, Quaternion.identity);
         bodyParts.Insert(0, body);
-        gameOverCanvas.gameObject.SetActive(false);
     }
     private void OnEnable()
     {
@@ -129,18 +129,6 @@ public class PlayerController : MonoBehaviour
             Destroy(other.gameObject);
             CollectedText.text ="SCORE: " + GameManager.food.ToString();
         }
-        else if (other.CompareTag("Obstacle")) 
-        {
-            TriggerGameOver();
-        }
-     
-    }
-    private void TriggerGameOver()
-    {
-            
-        Time.timeScale = 0;
-
-        gameOverCanvas.gameObject.SetActive(true);
     }
     private void OnCollisionEnter(Collision collision)
     {

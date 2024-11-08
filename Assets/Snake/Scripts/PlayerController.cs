@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using DG.Tweening;
 using TMPro;
+
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private GameManager gameManager;
@@ -23,13 +24,16 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Ease Easebody;
     [SerializeField] public TextMeshProUGUI CollectedText;
     [SerializeField] private FoodSpawner foodSpawner;
+    [SerializeField] private float airControlMultiplier = 0.5f;
+    [SerializeField] private float gravityMultiplier = 2f;
+    [SerializeField] private float jumpCooldown = 0.5f;
     
     private List<GameObject> bodyParts = new List<GameObject>();
     private List<Vector3> positionsHistory = new List<Vector3>();
     private Vector2 currentMoveInput; 
     private List<Quaternion> rotationsHistory = new List<Quaternion>();
     public int maxRotationHistorySize = 10;
-    
+    private float lastJumpTime;
     [SerializeField] private GameObject TailPart;
   
     private void Start()
@@ -58,9 +62,10 @@ public class PlayerController : MonoBehaviour
     }
     private void Onjump(bool isJumping)
     {
-        if (isJumping && isGrounded)
+        if (isJumping && isGrounded && Time.time >= lastJumpTime + jumpCooldown)
         {
             Jump();
+            lastJumpTime = Time.time;
         }
     }
     private void Jump()
@@ -70,6 +75,7 @@ public class PlayerController : MonoBehaviour
         
         particleEffect.Play();
         particleEffect1.Play();
+        
     }
     private void OnMove(Vector2 inputValue)
     {
@@ -77,23 +83,23 @@ public class PlayerController : MonoBehaviour
     }
     private void HandleMovement()
     {
-        float forwardMovement = currentMoveInput.y * moveSpeed * Time.deltaTime;
+        float controlFactor = isGrounded ? 1f : airControlMultiplier;
+        float forwardMovement = currentMoveInput.y * moveSpeed * Time.deltaTime * controlFactor;
         transform.position += transform.forward * forwardMovement;
 
         float steerDirection = currentMoveInput.x;
-        transform.Rotate(Vector3.up * (steerDirection * steerSpeed * Time.deltaTime));
+        float targetAngle = steerDirection * steerSpeed * Time.deltaTime;
+        transform.Rotate(Vector3.up * targetAngle);
     }
     private void UpdatePositionsHistory()
     {
         positionsHistory.Insert(0, transform.position);
-
         if (positionsHistory.Count > maxHistorySize)
             positionsHistory.RemoveAt(positionsHistory.Count - 1);
     }
     private void UpdateRotationsHistory()
     {
         rotationsHistory.Insert(0, transform.rotation);
-
         if (rotationsHistory.Count > maxRotationHistorySize)
             rotationsHistory.RemoveAt(rotationsHistory.Count - 1);
     }
@@ -102,10 +108,8 @@ public class PlayerController : MonoBehaviour
         for (int i = 0; i < bodyParts.Count; i++)
         {
             int historyIndex = Mathf.Clamp(i * gap, 0, positionsHistory.Count - 1);
-        
             Vector3 targetPosition = positionsHistory[historyIndex];
             Quaternion targetRotation = rotationsHistory[historyIndex];
-
             bodyParts[i].transform.position = Vector3.Lerp(bodyParts[i].transform.position,
                 targetPosition, bodySpeed * Time.deltaTime);
             bodyParts[i].transform.rotation = Quaternion.Lerp(bodyParts[i].transform.rotation, 
@@ -126,12 +130,10 @@ public class PlayerController : MonoBehaviour
             GrowSnake();
             GameManager.food++;
             Destroy(other.gameObject);
-
             if (CollectedText != null)
             {
                 CollectedText.text = "SCORE: " + GameManager.food.ToString();
             }
-
             GameObject foodSpawner = GameObject.Find("FoodSpawner");
             if (foodSpawner != null)
             {
@@ -156,8 +158,6 @@ public class PlayerController : MonoBehaviour
         if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded = false; 
-            
-          
         }
     }
 }

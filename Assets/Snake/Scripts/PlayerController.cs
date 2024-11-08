@@ -1,8 +1,9 @@
-using System;
+using System.Collections;
 using UnityEngine;
 using System.Collections.Generic;
 using DG.Tweening;
 using TMPro;
+using Random = UnityEngine.Random;
 
 public class PlayerController : MonoBehaviour
 {
@@ -27,7 +28,12 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float airControlMultiplier = 0.5f;
     [SerializeField] private float gravityMultiplier = 2f;
     [SerializeField] private float jumpCooldown = 0.5f;
-    
+    [SerializeField] private TextMeshProUGUI countdownText;
+    [SerializeField] private AudioSource growSound;
+    private bool jumpDisabled;
+    private bool movementInverted;
+    [SerializeField] private float actionInterval = 10f; 
+    private Coroutine activeEffectCoroutine;
     private List<GameObject> bodyParts = new List<GameObject>();
     private List<Vector3> positionsHistory = new List<Vector3>();
     private Vector2 currentMoveInput; 
@@ -35,12 +41,15 @@ public class PlayerController : MonoBehaviour
     public int maxRotationHistorySize = 10;
     private float lastJumpTime;
     [SerializeField] private GameObject TailPart;
-  
+    private bool isJumpEnabled = true;
+    
     private void Start()
     {
         positionsHistory.Add(playerTransform.position);
         GameObject body = Instantiate(TailPart, playerTransform.position, Quaternion.identity);
         bodyParts.Insert(0, body);
+      
+       
     }
     private void OnEnable()
     {
@@ -62,7 +71,7 @@ public class PlayerController : MonoBehaviour
     }
     private void Onjump(bool isJumping)
     {
-        if (isJumping && isGrounded && Time.time >= lastJumpTime + jumpCooldown)
+        if (isJumping && isGrounded && isJumpEnabled && !jumpDisabled && Time.time >= lastJumpTime + jumpCooldown)
         {
             Jump();
             lastJumpTime = Time.time;
@@ -72,10 +81,8 @@ public class PlayerController : MonoBehaviour
     {
         playerRigidbody.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         isGrounded = false;
-        
         particleEffect.Play();
         particleEffect1.Play();
-        
     }
     private void OnMove(Vector2 inputValue)
     {
@@ -84,10 +91,11 @@ public class PlayerController : MonoBehaviour
     private void HandleMovement()
     {
         float controlFactor = isGrounded ? 1f : airControlMultiplier;
-        float forwardMovement = currentMoveInput.y * moveSpeed * Time.deltaTime * controlFactor;
+    
+        float forwardMovement = (movementInverted ? -currentMoveInput.y : currentMoveInput.y) * moveSpeed * Time.deltaTime * controlFactor;
         transform.position += transform.forward * forwardMovement;
 
-        float steerDirection = currentMoveInput.x;
+        float steerDirection = movementInverted ? -currentMoveInput.x : currentMoveInput.x;
         float targetAngle = steerDirection * steerSpeed * Time.deltaTime;
         transform.Rotate(Vector3.up * targetAngle);
     }
@@ -116,12 +124,15 @@ public class PlayerController : MonoBehaviour
                 targetRotation, bodySpeed * Time.deltaTime);
         }
     }
-
     private void GrowSnake()
     {
         GameObject body = Instantiate(bodyPrefab, playerTransform.position, Quaternion.identity);
         bodyParts.Insert(0, body);
         body.transform.DOScale(Vector3.one,Scaletime).SetEase(Easebody);
+        if (growSound != null)
+        {
+            growSound.Play();
+        }
     }
     private void OnTriggerEnter(Collider other)
     {
@@ -132,7 +143,7 @@ public class PlayerController : MonoBehaviour
             Destroy(other.gameObject);
             if (CollectedText != null)
             {
-                CollectedText.text = "SCORE: " + GameManager.food.ToString();
+                CollectedText.text = GameManager.food.ToString();
             }
             GameObject foodSpawner = GameObject.Find("FoodSpawner");
             if (foodSpawner != null)
@@ -159,5 +170,60 @@ public class PlayerController : MonoBehaviour
         {
             isGrounded = false; 
         }
+    }
+    private IEnumerator ActionIntervalCountdown()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(30f);
+            int effectWarningTime = 5;
+            int randomEffect = Random.Range(0, 2); 
+            for (int i = effectWarningTime; i > 0; i--)
+            {
+                if (randomEffect == 0)
+                {
+                    countdownText.text = $"Warning: Jump will be disabled in {i} seconds";
+                }
+                else
+                {
+                    countdownText.text = $"Warning: Movement will be inverted in {i} seconds";
+                }
+                yield return new WaitForSeconds(1f);
+            }
+            countdownText.text = "";
+            if (randomEffect == 0)
+            {
+                activeEffectCoroutine = StartCoroutine(JumpDisableCountdown());
+            }
+            else
+            {
+                activeEffectCoroutine = StartCoroutine(InvertMovementCountdown());
+            }
+            yield return new WaitForSeconds(actionInterval);
+        }
+    }
+    private IEnumerator JumpDisableCountdown()
+    {
+        jumpDisabled = true;
+        int effectDuration = 20; 
+        for (int i = effectDuration; i > 0; i--)
+        {
+            countdownText.text = $"Jump disabled. System recovers in {i} seconds";
+            yield return new WaitForSeconds(1f);
+        }
+        countdownText.text = "";
+        jumpDisabled = false;
+    }
+    private IEnumerator InvertMovementCountdown()
+    {
+        movementInverted = true;
+        int effectDuration = 20; 
+        for (int i = effectDuration; i > 0; i--)
+        {
+            countdownText.text = $"Movement inverted. System recovers in {i} seconds";
+            yield return new WaitForSeconds(1f);
+        }
+        countdownText.text = "";
+        movementInverted = false;
     }
 }

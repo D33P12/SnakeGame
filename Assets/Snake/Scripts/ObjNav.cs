@@ -1,10 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.AI;
 public class ObjNav : MonoBehaviour
 {
-    [SerializeField] public Slider distanceSlider;  
     [SerializeField] private float maxDistance = 100f; 
     [SerializeField] private GameObject arrowPrefab;
     
@@ -26,7 +23,6 @@ public class ObjNav : MonoBehaviour
         if (player == null) return; 
 
         FindClosestPrefab();
-        DisplayClosestPrefab(); 
         UpdateArrowGuide();
     }
 
@@ -48,25 +44,12 @@ public class ObjNav : MonoBehaviour
             }
         }
     }
-
-    void DisplayClosestPrefab()
-    {
-        if (_closestSoul != null)
-        {
-            distanceSlider.value = Mathf.Clamp(closestDistance, 0, maxDistance);
-        }
-        else
-        {
-            distanceSlider.value = 0;
-        }
-    }
     void UpdateArrowGuide()
     {
         if (_closestSoul != null && closestDistance <= maxDistance)
         {
             arrowInstance.SetActive(true);
             Vector3 directionToTarget = (_closestSoul.transform.position - player.position).normalized;
-
             arrowInstance.transform.rotation = Quaternion.LookRotation(directionToTarget) * Quaternion.Euler(0, 180, 0);;
         }
         else

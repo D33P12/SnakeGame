@@ -12,7 +12,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip collectable;
     public AudioClip pickup;
     public AudioClip wallbang;
-
+    
     private void Start()
     {
         musicSource.clip = Background;
@@ -24,4 +24,5 @@ public class AudioManager : MonoBehaviour
         SFXSource.PlayOneShot(clip);
     }
 
+   
 }

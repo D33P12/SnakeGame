@@ -6,15 +6,19 @@ public class ObjNav : MonoBehaviour
 {
     [SerializeField] public Slider distanceSlider;  
     [SerializeField] private float maxDistance = 100f; 
-
+    [SerializeField] private GameObject arrowPrefab;
+    
     private Transform player;  
     private GameObject _closestSoul; 
     private float closestDistance;  
     private List<GameObject> spawnedPrefabs = new List<GameObject>(); 
-
+    private GameObject arrowInstance;
     private void Start()
     {
         player = GameObject.FindWithTag("Player")?.transform; 
+        arrowInstance = Instantiate(arrowPrefab, player.position + Vector3.up * 2, Quaternion.identity);
+        arrowInstance.transform.SetParent(player); 
+        arrowInstance.SetActive(false); 
     }
 
     private void Update()
@@ -23,6 +27,7 @@ public class ObjNav : MonoBehaviour
 
         FindClosestPrefab();
         DisplayClosestPrefab(); 
+        UpdateArrowGuide();
     }
 
     void FindClosestPrefab()
@@ -55,7 +60,20 @@ public class ObjNav : MonoBehaviour
             distanceSlider.value = 0;
         }
     }
+    void UpdateArrowGuide()
+    {
+        if (_closestSoul != null && closestDistance <= maxDistance)
+        {
+            arrowInstance.SetActive(true);
+            Vector3 directionToTarget = (_closestSoul.transform.position - player.position).normalized;
 
+            arrowInstance.transform.rotation = Quaternion.LookRotation(directionToTarget) * Quaternion.Euler(0, 180, 0);;
+        }
+        else
+        {
+            arrowInstance.SetActive(false);
+        }
+    }
     public void RegisterPrefabSpawn(GameObject prefab)
     {
         if (!spawnedPrefabs.Contains(prefab))

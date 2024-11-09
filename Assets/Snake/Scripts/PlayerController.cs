@@ -48,8 +48,7 @@ public class PlayerController : MonoBehaviour
         positionsHistory.Add(playerTransform.position);
         GameObject body = Instantiate(TailPart, playerTransform.position, Quaternion.identity);
         bodyParts.Insert(0, body);
-      
-       
+        Cursor.lockState = CursorLockMode.Locked;
     }
     private void OnEnable()
     {

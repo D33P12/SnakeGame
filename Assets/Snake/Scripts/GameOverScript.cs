@@ -14,6 +14,7 @@ public class GameOverScript : MonoBehaviour
         {
             Time.timeScale = 0;
             gameOverCanvas.gameObject.SetActive(true);
+            Cursor.lockState = CursorLockMode.None;
         }
     }
 }

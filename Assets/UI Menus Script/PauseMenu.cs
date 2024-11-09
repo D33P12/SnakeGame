@@ -31,7 +31,7 @@ public class PauseMenu : MonoBehaviour
         pauseMenu.SetActive(true);
         Time.timeScale = 0f;
         isPaused = true;
-       
+        Cursor.lockState = CursorLockMode.None;
     }
 
     public void ResumeGame()
@@ -39,7 +39,7 @@ public class PauseMenu : MonoBehaviour
         pauseMenu.SetActive(false);
         Time.timeScale = 1f;
         isPaused = false;
-      
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     public void GoToMainMenu()
@@ -47,7 +47,7 @@ public class PauseMenu : MonoBehaviour
         Time.timeScale = 1f;
         SceneManager.LoadScene("MainMenu");
         GameManager.food = 0;
-     
+        Cursor.lockState = CursorLockMode.None;
     }
 
     public void QuitGame()
@@ -59,5 +59,6 @@ public class PauseMenu : MonoBehaviour
         GameManager.food = 0;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         Time.timeScale = 1f;  
+        Cursor.lockState = CursorLockMode.Locked;
     }
 }
